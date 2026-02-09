@@ -39,8 +39,6 @@ function CategoryFormModal({ open, setOpen, selectedCategory, formType, onSucces
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
 
-
-
   const formSchema = z.object({
     name: z.string().min(1, "Name is required"),
     description: z.string().min(1, "Description is required"),

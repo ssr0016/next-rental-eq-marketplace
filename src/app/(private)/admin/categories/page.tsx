@@ -13,7 +13,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { ICategory } from "@/interfaces"
-import { getAllCategories } from "@/server-actions/categories"
+import { deleteCategoryById, getAllCategories } from "@/server-actions/categories"
 import dayjs from "dayjs"
 import { Edit2, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -44,6 +44,23 @@ function CategoriesPage() {
     }
   }
 
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      setLoading(true)
+      const response = await deleteCategoryById(id)
+      if (!response.success) {
+        toast.error(response.message)
+        return
+      }
+      toast.success(response.message)
+      setCategories((prev) => prev.filter((item) => item.id !== id))
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     getData()
   }, [])
@@ -62,6 +79,7 @@ function CategoriesPage() {
         <PageTitle title="Categories" />
         <Button onClick={() => {
           setOpenCategoryForm(true)
+          setSelectedCategory(null)
           setFormType("add")
         }}>Add Category</Button>
       </div>
@@ -111,7 +129,8 @@ function CategoriesPage() {
                 <TableCell>
                   <div className="flex gap-5">
                     <Button
-                      variant={"outline"} size={"icon"}
+                      variant={"outline"}
+                      size={"icon"}
                       onClick={() => {
                         setFormType("edit")
                         setSelectedCategory(item)
@@ -121,7 +140,11 @@ function CategoriesPage() {
                       <Edit2 />
                     </Button>
 
-                    <Button variant={"outline"} size={"icon"}>
+                    <Button
+                      variant={"outline"}
+                      size={"icon"}
+                      onClick={() => handleDeleteCategory(item.id)}
+                    >
                       <Trash2 />
                     </Button>
                   </div>
