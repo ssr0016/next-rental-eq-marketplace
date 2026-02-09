@@ -35,7 +35,7 @@ function CategoriesPage() {
         toast.error(response.message)
         return;
       }
-      console.log(response)
+      // console.log(response)
       setCategories(response.data)
     } catch (error: any) {
       toast.error(error.message)
@@ -155,8 +155,6 @@ function CategoriesPage() {
           </TableBody>
         </Table>
       )}
-
-
 
       {openCategoryForm && (
         <CategoryFormModal

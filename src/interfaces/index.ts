@@ -17,3 +17,15 @@ export interface ICategory {
   updated_at: string;
   user_id: string;
 }
+export interface ItemInterface {
+  id: string;
+  name: string;
+  description: string;
+  images: string[];
+  rent_per_day: number;
+  available_quantity: number;
+  total_quantity: number;
+  category_id: string;
+  created_at: string;
+  updated_at: string;
+}
