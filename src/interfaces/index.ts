@@ -13,7 +13,7 @@ export interface ICategory {
   name: string;
   description: string;
   image: string;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
   user_id: string;
 }

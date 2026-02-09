@@ -32,9 +32,10 @@ interface ICategoryFormModalProps {
   setOpen: (open: boolean) => void
   selectedCategory?: ICategory | null
   formType: "add" | "edit"
+  onSuccess?: () => void
 }
 
-function CategoryFormModal({ open, setOpen, selectedCategory, formType }: ICategoryFormModalProps) {
+function CategoryFormModal({ open, setOpen, selectedCategory, formType, onSuccess }: ICategoryFormModalProps) {
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -94,6 +95,9 @@ function CategoryFormModal({ open, setOpen, selectedCategory, formType }: ICateg
           ? "Category added successfully"
           : "Category updated successfully",
       )
+      if (onSuccess) {
+        onSuccess()
+      }
       setOpen(false)
       form.reset()
     } catch (error: any) {

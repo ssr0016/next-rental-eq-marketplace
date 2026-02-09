@@ -158,3 +158,6 @@ body {
   justify-content: center;
   align-items: center;
 }
+table {
+  border: 1px solid #a7a7a7;
+}
