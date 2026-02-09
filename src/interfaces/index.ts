@@ -7,3 +7,13 @@ export interface IUser {
   role: "user" | "admin";
   createdAt: Date;
 }
+
+export interface ICategory {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  createdAt: Date;
+  updatedAt: Date;
+  user_id: string;
+}
