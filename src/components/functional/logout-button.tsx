@@ -20,7 +20,7 @@ function LogoutButton() {
 
 
   return (
-    <Button onClick={onClick} className="w-max">Logout</Button>
+    <Button onClick={onClick}>Logout</Button>
   )
 }
 

@@ -1,5 +1,4 @@
 
-import LogoutButton from "@/components/functional/logout-button"
 import { IUser } from "@/interfaces/index"
 import { getLoggedInUser } from "@/server-actions/users"
 
@@ -27,8 +26,6 @@ async function UserDashboardPage() {
       <h1>
         Role : {user.role}
       </h1>
-
-      <LogoutButton />
     </div>
   )
 }

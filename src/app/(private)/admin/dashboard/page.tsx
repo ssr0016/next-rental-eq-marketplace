@@ -1,6 +1,5 @@
 "use client"
 
-import LogoutButton from "@/components/functional/logout-button"
 import usersGlobalStore, { IUsersGlobalSore } from "@/store/users-store"
 
 function AdminDashboardPage() {
@@ -21,8 +20,6 @@ function AdminDashboardPage() {
       <h1>
         Role : {user?.role}
       </h1>
-
-      <LogoutButton />
     </div>
   )
 }
