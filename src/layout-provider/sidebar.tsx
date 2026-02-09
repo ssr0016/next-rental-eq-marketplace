@@ -7,7 +7,7 @@ import {
   SheetTitle
 } from "@/components/ui/sheet";
 import usersGlobalStore, { IUsersGlobalSore } from "@/store/users-store";
-import { ChartBarStacked, Grid2x2Plus, List, Scan } from "lucide-react";
+import { ChartBarStacked, Contact, Grid2x2Plus, List, ListTodo, User2Icon } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 
@@ -37,17 +37,17 @@ function Sidebar({ openSidebar, setOpenSidebar }: { openSidebar: boolean, setOpe
     {
       name: "Rents History",
       path: "/admin/rents-history",
-      icon: <Scan size={size} />
+      icon: <ListTodo size={size} />
     },
     {
       name: "Customers",
       path: "/admin/customers",
-      icon: <Scan size={size} />
+      icon: <Contact size={size} />
     },
     {
       name: "Profile",
       path: "/admin/profile",
-      icon: <Scan size={size} />
+      icon: <User2Icon size={size} />
     }
   ]
 
@@ -55,22 +55,22 @@ function Sidebar({ openSidebar, setOpenSidebar }: { openSidebar: boolean, setOpe
     {
       name: "Dashboard",
       path: "/user/dashboard",
-      icon: <Scan size={size} />
+      icon: <Grid2x2Plus size={size} />
     },
     {
       name: "Rents",
       path: "/user/rents",
-      icon: <Scan size={size} />
+      icon: <ListTodo size={size} />
     },
     {
       name: "Items",
       path: "/user/items",
-      icon: <Scan size={size} />
+      icon: <List size={size} />
     },
     {
       name: "Profile",
       path: "/user/profile",
-      icon: <Scan size={size} />
+      icon: <User2Icon size={size} />
     }
   ]
 

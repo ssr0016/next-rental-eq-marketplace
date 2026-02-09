@@ -1,4 +1,5 @@
 
+import Spinner from "@/components/ui/spinner"
 import { getLoggedInUser } from "@/server-actions/users"
 import usersGlobalStore, { IUsersGlobalSore } from "@/store/users-store"
 import Cookies from "js-cookie"
@@ -35,9 +36,7 @@ function PrivateLayout({ children }: { children: React.ReactNode }) {
   }, [])
 
   if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">Loading...</div>
-    )
+    return (<Spinner />)
   }
 
   return (
