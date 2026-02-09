@@ -110,7 +110,14 @@ function CategoriesPage() {
 
                 <TableCell>
                   <div className="flex gap-5">
-                    <Button variant={"outline"} size={"icon"}>
+                    <Button
+                      variant={"outline"} size={"icon"}
+                      onClick={() => {
+                        setFormType("edit")
+                        setSelectedCategory(item)
+                        setOpenCategoryForm(true)
+                      }}
+                    >
                       <Edit2 />
                     </Button>
 

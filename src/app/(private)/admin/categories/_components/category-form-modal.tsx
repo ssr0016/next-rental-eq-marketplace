@@ -154,7 +154,7 @@ function CategoryFormModal({ open, setOpen, selectedCategory, formType, onSucces
                     <FormControl>
                       <Input
                         type="file"
-                        placeholder="" {...field}
+                        placeholder=""
                         onChange={(e) => {
                           const file = e.target.files?.[0]
                           if (file) {
@@ -169,10 +169,14 @@ function CategoryFormModal({ open, setOpen, selectedCategory, formType, onSucces
                 )}
               />
 
-              {selectedImageFile && (
+              {(selectedImageFile || selectedCategory?.image) && (
                 <div>
                   <img
-                    src={URL.createObjectURL(selectedImageFile)}
+                    src={
+                      selectedImageFile
+                        ? URL.createObjectURL(selectedImageFile)
+                        : selectedCategory?.image
+                    }
                     className="w-20 h-20 object-cover rounded p-2 border border-gray-300"
                   />
                 </div>
@@ -182,6 +186,10 @@ function CategoryFormModal({ open, setOpen, selectedCategory, formType, onSucces
                 <Button
                   type="button"
                   variant="outline"
+                  onClick={() => {
+                    setOpen(false)
+                    form.reset()
+                  }}
                 >
                   Cancel
                 </Button>
