@@ -1,7 +1,9 @@
+import LayoutProvider from "@/layout-provider";
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
+
 
 const montserrat = Montserrat({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 
@@ -18,7 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={montserrat.className}>
       <body>
-        {children}
+        <LayoutProvider>
+          {children}
+        </LayoutProvider>
         <Toaster />
       </body>
     </html>
