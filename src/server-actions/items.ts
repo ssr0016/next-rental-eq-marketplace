@@ -2,7 +2,7 @@
 
 import supabaseConfig from "@/config/supabase-config";
 import { ItemInterface } from "@/interfaces";
-export const addNewItem = async (item: ItemInterface) => {
+export const addNewItem = async (item: Partial<ItemInterface>) => {
   try {
     const { data, error } = await supabaseConfig.from("items").insert([item]);
     if (error) {
@@ -25,15 +25,19 @@ export const getAllItems = async () => {
   try {
     const { data, error } = await supabaseConfig
       .from("items")
-      .select("*")
+      .select("*, categories(id, name)")
       .order("created_at", { ascending: false });
     if (error) {
       throw new Error(error.message);
     }
+    console.log(data);
     return {
       success: true,
       message: "Items fetched successfully",
-      data: data,
+      data: data.map((item: any) => ({
+        ...item,
+        category: item.categories,
+      })),
     };
   } catch (error: any) {
     return {

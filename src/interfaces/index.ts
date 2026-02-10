@@ -18,7 +18,7 @@ export interface ICategory {
   user_id: string;
 }
 export interface ItemInterface {
-  id: string;
+  id: number;
   name: string;
   description: string;
   images: string[];
@@ -28,4 +28,7 @@ export interface ItemInterface {
   category_id: string;
   created_at: string;
   updated_at: string;
+
+  // Runtime only
+  category: ICategory;
 }

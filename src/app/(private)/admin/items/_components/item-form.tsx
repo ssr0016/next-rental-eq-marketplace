@@ -12,9 +12,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { uploadFileAndGetUrl } from "@/helpers"
 import { ICategory, ItemInterface } from "@/interfaces"
 import { getAllCategories } from "@/server-actions/categories"
+import { addNewItem, updateItemById } from "@/server-actions/items"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import toast from "react-hot-toast"
@@ -30,6 +33,7 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
   const [categories, setCategories] = useState<ICategory[]>([])
   const [newlySelectedImageFiles, setNewlySelectedImageFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const getData = async () => {
     try {
@@ -75,9 +79,38 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      setLoading(true)
+      let newImageUrls = []
+      for (let file of newlySelectedImageFiles) {
+        const response = await uploadFileAndGetUrl(file)
+        if (!response.success) {
+          throw new Error(response.message)
+        }
+        newImageUrls.push(response.data)
+      }
 
-    } catch (error) {
+      const allImages = [...values.images, ...newImageUrls]
+      values.images = allImages
+      let saveResponse = null
 
+      if (formType === "add") {
+        saveResponse = await addNewItem(values)
+      } else {
+        saveResponse = await updateItemById(initialValues?.id || 0, values)
+      }
+      if (!saveResponse.success) {
+        throw new Error(saveResponse.message)
+      }
+      toast.success(
+        formType === "add"
+          ? "Item added successfully"
+          : "Item updated successfully"
+      )
+      router.push("/admin/items")
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -87,11 +120,11 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
   }
 
   return (
-    <div className="mt-7">
+    <div className="p-5">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <div className="grid grid-cols-3 gap-5 items-center">
-            <div className="col-span-2">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="col-span-1">
               <FormField
                 control={form.control}
                 name="name"
@@ -114,30 +147,28 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-full" >
-                          <SelectValue placeholder="Select a verified catogory to display" />
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="w-full">
                         {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id.toString()} >
+                          <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem >
+                  </FormItem>
                 )}
               />
             </div>
           </div>
 
+          {/* Description - Already responsive */}
           <FormField
             control={form.control}
             name="description"
@@ -145,14 +176,15 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="" {...field} />
+                  <Textarea {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <div className="grid grid-cols-3 gap-5">
+          {/* Quantity/Price Grid - RESPONSIVE CHANGE */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="col-span-1">
               <FormField
                 control={form.control}
@@ -161,7 +193,10 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
                   <FormItem>
                     <FormLabel>Rent Per Day</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="" {...field}
+                      <Input
+                        type="number"
+                        placeholder=""
+                        {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>
@@ -179,7 +214,10 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
                   <FormItem>
                     <FormLabel>Available Quantity</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="" {...field}
+                      <Input
+                        type="number"
+                        placeholder=""
+                        {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>
@@ -197,7 +235,10 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
                   <FormItem>
                     <FormLabel>Total Quantity</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="" {...field}
+                      <Input
+                        type="number"
+                        placeholder=""
+                        {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>
@@ -208,7 +249,8 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3">
+          {/* Image Upload - RESPONSIVE CHANGE */}
+          <div className="grid grid-cols-1 md:grid-cols-3">
             <div className="col-span-1">
               <FormField
                 control={form.control}
@@ -217,11 +259,15 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
                   <FormItem>
                     <FormLabel>Images</FormLabel>
                     <FormControl>
-                      <Input type="file" multiple placeholder="" {...field}
-                        onChange={(e => {
+                      <Input
+                        type="file"
+                        multiple
+                        placeholder=""
+                        {...field}
+                        onChange={(e) => {
                           const files: any = e.target.files
                           setNewlySelectedImageFiles(Array.from(files))
-                        })}
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -231,14 +277,20 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-5">
+          {/* Image Preview Grid - RESPONSIVE CHANGE */}
+          <div className="flex flex-wrap gap-3 md:gap-5">
             {newlySelectedImageFiles.map((file, index) => (
-              <div className=" border border-gray-300 p-1 rounded flex flex-col gap-3" key={index}>
+              <div
+                className="border border-gray-300 p-1 rounded flex flex-col gap-2 md:gap-3"
+                key={index}
+              >
                 <img
                   src={URL.createObjectURL(file)}
-                  className="w-20 h-20 object-contain"
+                  className="w-16 h-16 md:w-20 md:h-20 object-contain"
+                  alt={`Preview ${index}`}
                 />
-                <span className="text-sm underline text-gray-600 cursor-pointer"
+                <span
+                  className="text-xs md:text-sm underline text-gray-600 cursor-pointer"
                   onClick={() => handleFileDelete(index)}
                 >
                   Delete
@@ -247,11 +299,12 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
             ))}
           </div>
 
-          <div className="flex justify-end gap-5">
-            <Button type="button" variant="outline" onClick={() => { }}>
-              Cancel{""}
+          {/* Buttons - RESPONSIVE CHANGE */}
+          <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-5">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => { router.back() }}>
+              Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {formType === "add" ? "Add" : "Edit"}
             </Button>
           </div>
