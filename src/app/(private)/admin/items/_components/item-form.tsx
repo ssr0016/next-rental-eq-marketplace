@@ -32,6 +32,7 @@ interface ItemFormProps {
 function ItemForm({ formType, initialValues }: ItemFormProps) {
   const [categories, setCategories] = useState<ICategory[]>([])
   const [newlySelectedImageFiles, setNewlySelectedImageFiles] = useState<File[]>([])
+  const [existingImages, setExistingImages] = useState<string[]>(initialValues?.images || [])
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -69,7 +70,7 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
     defaultValues: {
       name: initialValues?.name || "",
       description: initialValues?.description || "",
-      category_id: initialValues?.category_id || "",
+      category_id: initialValues?.category_id?.toString() || "",
       rent_per_day: initialValues?.rent_per_day || 0,
       available_quantity: initialValues?.available_quantity || 0,
       total_quantity: initialValues?.total_quantity || 0,
@@ -89,7 +90,7 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
         newImageUrls.push(response.data)
       }
 
-      const allImages = [...values.images, ...newImageUrls]
+      const allImages = [...existingImages, ...newImageUrls]
       values.images = allImages
       let saveResponse = null
 
@@ -117,6 +118,10 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
   const handleFileDelete = (index: number) => {
     const updatedFiles = newlySelectedImageFiles.filter((_, i) => i !== index);
     setNewlySelectedImageFiles(updatedFiles);
+  }
+
+  const handleExistingImageDelete = (url: string) => {
+    setExistingImages((prev) => prev.filter((item) => item !== url));
   }
 
   return (
@@ -263,7 +268,6 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
                         type="file"
                         multiple
                         placeholder=""
-                        {...field}
                         onChange={(e) => {
                           const files: any = e.target.files
                           setNewlySelectedImageFiles(Array.from(files))
@@ -279,19 +283,29 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
 
           {/* Image Preview Grid - RESPONSIVE CHANGE */}
           <div className="flex flex-wrap gap-3 md:gap-5">
-            {newlySelectedImageFiles.map((file, index) => (
+            {[...newlySelectedImageFiles, ...existingImages].map((item, index) => (
               <div
                 className="border border-gray-300 p-1 rounded flex flex-col gap-2 md:gap-3"
                 key={index}
               >
                 <img
-                  src={URL.createObjectURL(file)}
+                  src={
+                    typeof item === "string"
+                      ? item
+                      : URL.createObjectURL(item)
+                  }
                   className="w-16 h-16 md:w-20 md:h-20 object-contain"
                   alt={`Preview ${index}`}
                 />
                 <span
                   className="text-xs md:text-sm underline text-gray-600 cursor-pointer"
-                  onClick={() => handleFileDelete(index)}
+                  onClick={() => {
+                    if (typeof item === "string") {
+                      handleExistingImageDelete(item)
+                    } else {
+                      handleFileDelete(index)
+                    }
+                  }}
                 >
                   Delete
                 </span>
@@ -301,7 +315,7 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
 
           {/* Buttons - RESPONSIVE CHANGE */}
           <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-5">
-            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => { router.back() }}>
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => { router.push("/admin/items") }}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="w-full sm:w-auto">
@@ -310,7 +324,7 @@ function ItemForm({ formType, initialValues }: ItemFormProps) {
           </div>
         </form>
       </Form>
-    </div>
+    </div >
   )
 }
 

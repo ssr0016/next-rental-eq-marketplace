@@ -30,7 +30,7 @@ export const getAllItems = async () => {
     if (error) {
       throw new Error(error.message);
     }
-    console.log(data);
+    // console.log(data);
     return {
       success: true,
       message: "Items fetched successfully",
