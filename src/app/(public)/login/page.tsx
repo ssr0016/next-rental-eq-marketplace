@@ -18,7 +18,6 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-
   const formSchema = z.object({
     email: z.string().email("Invalid email"),
     password: z.string().min(8, "Password must be at least 8 characters"),
@@ -26,8 +25,6 @@ function LoginPage() {
       error: "Please select a role",
     }),
   });
-
-
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,7 +42,6 @@ function LoginPage() {
       if (!response.success) {
         throw new Error(response.message)
       }
-      // console.log(response)
       Cookies.set("access_token", response.data)
       Cookies.set("role", values.role)
 
@@ -72,12 +68,15 @@ function LoginPage() {
   ]
 
   return (
-    <div className="auth-bg" >
-      <div className="bg-white shadow-sm p-5 w-[500px] rounded-lg">
-        <div className="text-xl font-bold! text-primary">Login to your account</div>
-        <hr className="my-5 border border-gray-300" />
+    <div className="auth-bg min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="bg-white shadow-sm p-5 sm:p-6 lg:p-8 w-full max-w-[500px] rounded-lg">
+        <div className="text-lg sm:text-xl font-bold text-primary">
+          Login to your account
+        </div>
+        <hr className="my-4 sm:my-5 border border-gray-300" />
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
 
             <FormField
               control={form.control}
@@ -108,7 +107,6 @@ function LoginPage() {
               )}
             />
 
-
             {/* ROLE RADIO GROUP */}
             <FormField
               control={form.control}
@@ -121,7 +119,7 @@ function LoginPage() {
                     <RadioGroup
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="flex gap-5"
+                      className="flex flex-col sm:flex-row gap-3 sm:gap-5"
                     >
                       {roles.map((role) => (
                         <FormItem
@@ -143,20 +141,26 @@ function LoginPage() {
               )}
             />
 
-            <div className="flex justify-between items-center">
-              <span className="text-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-2 pt-2">
+              <span className="text-sm order-2 sm:order-1">
                 Don't have an account?{" "}
                 <Link href={"/register"} className="text-primary underline">
                   Register
-                </Link >
+                </Link>
               </span>
-              <Button disabled={loading} type="submit">LOGIN</Button>
+              <Button
+                disabled={loading}
+                type="submit"
+                className="w-full sm:w-auto order-1 sm:order-2"
+              >
+                LOGIN
+              </Button>
             </div>
 
           </form>
         </Form>
       </div>
-    </div >
+    </div>
   )
 }
 
