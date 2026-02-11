@@ -7,11 +7,13 @@ import PageTitle from "@/components/ui/page-title"
 import Spinner from "@/components/ui/spinner"
 import { ItemInterface } from "@/interfaces"
 import { getItemById } from "@/server-actions/items"
+import { createRentOrder, getItemAvailability } from "@/server-actions/orders"
 import { getStripePaymentIntent } from "@/server-actions/payments"
+import usersGlobalStore, { IUsersGlobalSore } from "@/store/users-store"
 import { Elements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import days from "dayjs"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import CheckoutForm from "../_components/checkout-form"
@@ -26,11 +28,15 @@ function ItemInfoPage() {
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
   const [quantity, setQuantity] = useState(1)
-  const [isAvailable, setIsAvailable] = useState(true) // for now, since we dont have any data in the database
+  const [isAvailable, setIsAvailable] = useState(false)
   const [gettingPaymentIntent, setGettingPaymentIntent] = useState(false)
   const [totalAmount, setTotalAmount] = useState(0)
   const [clientSecret, setClientSecret] = useState('')
   const [openCheckoutForm, setOpenCheckoutForm] = useState(false)
+  const [fetchingAvailability, setFetchingAvailability] = useState(false)
+  const [availableQuantity, setAvailableQuantity] = useState(0)
+  const { user } = usersGlobalStore() as IUsersGlobalSore
+  const router = useRouter()
 
   const getData = async () => {
     try {
@@ -66,10 +72,54 @@ function ItemInfoPage() {
     }
   }
 
-  const handleCheckoutFormSuccess = (paymentId: string) => {
+  const handleCheckAvailability = async () => {
     try {
+      setFetchingAvailability(true)
+      const response: any = await getItemAvailability({
+        itemId: item?.id!,
+        fromDate,
+        toDate,
+        requestedQuantity: quantity,
+        totalQuantity: item?.total_quantity!
+      })
 
-      console.log("Payment successful with ID:", paymentId);
+      if (!response.success) {
+        toast.error(response.message)
+        setIsAvailable(false)
+        return;
+      }
+      setIsAvailable(true)
+      setAvailableQuantity(response.availableQuantity)
+    } catch (error: any) {
+      toast.error(error.message)
+      setIsAvailable(false)
+    } finally {
+      setFetchingAvailability(false)
+    }
+  }
+
+  const handleCheckoutFormSuccess = async (paymentId: string) => {
+    try {
+      const payload = {
+        item_id: item?.id!,
+        user_id: user?.id!,
+        quantity,
+        from_date: fromDate,
+        to_date: toDate,
+        total_days: days(toDate).diff(days(fromDate), 'day') || 1,
+        total_amount: totalAmount,
+        payment_id: paymentId,
+        status: "booked",
+      }
+
+      const response = await createRentOrder(payload)
+      if (!response.success) {
+        toast.error(response.message)
+        return;
+      }
+      toast.success("Order created successfully");
+      router.push("/user/rents")
+      // console.log("Payment successful with ID:", paymentId);
     } catch (error: any) {
       toast.error(error.message)
     }
@@ -81,7 +131,7 @@ function ItemInfoPage() {
 
   useEffect(() => {
     if (fromDate && toDate && quantity) {
-      const numberOfDays = days(toDate).diff(days(fromDate), 'day') || 1
+      const numberOfDays = days(toDate).diff(days(fromDate), 'day') + 1
       const total = numberOfDays * item?.rent_per_day! * quantity
       setTotalAmount(total)
     }
@@ -102,6 +152,12 @@ function ItemInfoPage() {
         <h1 className="text-xs sm:text-sm font-bold text-gray-800">{value}</h1>
       </div>
     )
+  }
+
+  const clearValues = () => {
+    setIsAvailable(false)
+    setAvailableQuantity(0)
+    setTotalAmount(0)
   }
 
   const options = {
@@ -192,7 +248,10 @@ function ItemInfoPage() {
                   <Input
                     type="date"
                     value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
+                    onChange={(e) => {
+                      setFromDate(e.target.value)
+                      clearValues()
+                    }}
                     min={days().add(1, "day").format("YYYY-MM-DD")}
                     className="h-10 sm:h-11"
                   />
@@ -206,7 +265,10 @@ function ItemInfoPage() {
                   <Input
                     type="date"
                     value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
+                    onChange={(e) => {
+                      setToDate(e.target.value)
+                      clearValues()
+                    }}
                     disabled={!fromDate}
                     min={days(fromDate).format("YYYY-MM-DD")}
                     className="h-10 sm:h-11 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -221,7 +283,10 @@ function ItemInfoPage() {
                   <Input
                     type="number"
                     value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    onChange={(e) => {
+                      setQuantity(parseInt(e.target.value))
+                      clearValues()
+                    }}
                     min={1}
                     max={item?.total_quantity}
                     className="h-10 sm:h-11"
@@ -232,6 +297,14 @@ function ItemInfoPage() {
               {/* Total Amount Display */}
               {isAvailable && totalAmount > 0 && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm sm:text-base font-medium text-gray-700">
+                      Available Quantity:
+                    </span>
+                    <span className="text-sm sm:text-base font-bold text-green-700">
+                      {availableQuantity}
+                    </span>
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm sm:text-base font-medium text-gray-700">
                       Total Amount:
@@ -247,8 +320,9 @@ function ItemInfoPage() {
               <div className="flex flex-col gap-3">
                 <Button
                   variant="outline"
-                  disabled={!fromDate || !toDate || !quantity}
+                  disabled={!fromDate || !toDate || !quantity || fetchingAvailability}
                   className="h-10 sm:h-11 text-sm w-full"
+                  onClick={handleCheckAvailability}
                 >
                   Check Availability
                 </Button>

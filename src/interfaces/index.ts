@@ -29,7 +29,7 @@ export interface ItemInterface {
   created_at: string;
   updated_at: string;
 
-  // Runtime only
+  // runtime only
   category: ICategory;
 }
 
@@ -37,9 +37,16 @@ export interface IRentOrder {
   id: string;
   item_id: string;
   user_id: string;
-  start_date: string;
-  end_date: string;
+  from_date: Date;
+  to_date: Date;
+  quantity: number;
   total_amount: number;
+  total_days: number;
+  status: "booked" | "retured" | "cancelled ";
   created_at: string;
   updated_at: string;
+
+  // runtime only
+  item?: ItemInterface;
+  user?: IUser;
 }
