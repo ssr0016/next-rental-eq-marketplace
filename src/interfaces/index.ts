@@ -5,7 +5,7 @@ export interface IUser {
   profile_pic: string;
   password: string;
   role: "user" | "admin";
-  createdAt: Date;
+  created_at: string;
 }
 
 export interface ICategory {
@@ -49,4 +49,17 @@ export interface IRentOrder {
   // runtime only
   item?: ItemInterface;
   user?: IUser;
+}
+
+export interface DashboardStats {
+  totalCategories: number;
+  totalItems: number;
+  totalOrders: number;
+  totalPayments: number;
+}
+
+export interface UserDashboardStats {
+  totalOrders: number;
+  totalItems: number;
+  totalSpend: number;
 }

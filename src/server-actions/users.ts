@@ -132,3 +132,24 @@ export const getLoggedInUser = async () => {
     };
   }
 };
+
+export const getUserProfile = async () => {
+  try {
+    const userResponse = await getLoggedInUser();
+
+    if (!userResponse.success) {
+      throw new Error(userResponse.message);
+    }
+
+    return {
+      success: true,
+      data: userResponse.data,
+      message: "Profile fetched successfully",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
