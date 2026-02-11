@@ -34,7 +34,7 @@ function Sidebar({ openSidebar, setOpenSidebar }: { openSidebar: boolean, setOpe
     },
     {
       name: "Rents History",
-      path: "/admin/rents-history",
+      path: "/admin/orders",
       icon: <ListTodo size={size} />
     },
     {

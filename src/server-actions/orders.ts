@@ -93,7 +93,7 @@ export const getUserOrders = async (userId: string) => {
   }
 };
 
-export const getUpdateRentOrder = async (orderId: number, payload: any) => {
+export const updateRentOrder = async (orderId: number, payload: any) => {
   try {
     const { data, error } = await supabaseConfig
       .from("orders")
@@ -105,6 +105,32 @@ export const getUpdateRentOrder = async (orderId: number, payload: any) => {
     return {
       success: true,
       data: data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
+
+export const getAllOrders = async () => {
+  try {
+    const { data, error } = await supabaseConfig
+      .from("orders")
+      .select("*, items(name), user_profiles(name)")
+      .order("created_at", { ascending: false });
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return {
+      success: true,
+      data: data.map((order: any) => ({
+        ...order,
+        item: order.items,
+        user: order.user_profiles,
+      })),
     };
   } catch (error: any) {
     return {

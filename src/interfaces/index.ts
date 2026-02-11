@@ -42,7 +42,7 @@ export interface IRentOrder {
   quantity: number;
   total_amount: number;
   total_days: number;
-  status: "booked" | "retured" | "cancelled ";
+  status: "booked" | "returned" | "cancelled" | "completed" | "with-customer";
   created_at: string;
   updated_at: string;
 

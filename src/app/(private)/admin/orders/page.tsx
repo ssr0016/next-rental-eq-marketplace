@@ -13,25 +13,22 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { IRentOrder } from "@/interfaces"
-import { getUserOrders, updateRentOrder } from "@/server-actions/orders"
-import usersGlobalStore, { IUsersGlobalSore } from "@/store/users-store"
+import { getAllOrders, updateRentOrder } from "@/server-actions/orders"
 import { default as dayjs, default as days } from "dayjs"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 
-function UserRentOrders() {
+function AdminRentOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<IRentOrder[]>([])
-
-  const { user } = usersGlobalStore() as IUsersGlobalSore
 
   const getOrders = async () => {
     try {
       setLoading(true)
-      const response: any = await getUserOrders(user?.id as string)
+      const response: any = await getAllOrders()
       if (!response.success) {
         toast.error(response.message)
-        return;
+        return
       }
       setOrders(response.data)
     } catch (error: any) {
@@ -41,22 +38,20 @@ function UserRentOrders() {
     }
   }
 
-  const handleOrderCancel = async (orderId: number) => {
+  const handleOrderUpdate = async (payload: any) => {
     try {
       setLoading(true)
-      const response = await updateRentOrder(orderId, {
-        status: "cancelled",
-      })
+      const response = await updateRentOrder(payload.id, payload)
       if (!response.success) {
         toast.error(response.message)
-        return;
+        return
       }
-      toast.success("Order cancelled successfully")
+      toast.success("Order updated successfully")
       setOrders((prev) => prev.map((item: any) => {
-        if (item.id === orderId) {
+        if (item.id === payload.id) {
           return {
             ...item,
-            status: "cancelled"
+            status: payload.status
           }
         }
         return item
@@ -74,7 +69,8 @@ function UserRentOrders() {
 
   const columns = [
     "Order ID",
-    "Product Name",
+    "Product",
+    "Customer",
     "Quantity",
     "Price",
     "Status",
@@ -90,8 +86,10 @@ function UserRentOrders() {
         return "bg-green-100 text-green-800"
       case "cancelled":
         return "bg-red-100 text-red-800"
-      case "returned":
+      case "completed":
         return "bg-blue-100 text-blue-800"
+      case "with-customer":
+        return "bg-yellow-100 text-yellow-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -99,7 +97,7 @@ function UserRentOrders() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageTitle title="My Rent Orders" />
+      <PageTitle title="All Rent Orders" />
 
       {loading && <Spinner parentHeight="200" />}
 
@@ -108,7 +106,7 @@ function UserRentOrders() {
       {!loading && orders.length > 0 && (
         <>
           {/* Desktop Table View - Hidden on mobile */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden lg:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -127,12 +125,27 @@ function UserRentOrders() {
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">#{order.id}</TableCell>
                     <TableCell>{order.item?.name || "N/A"}</TableCell>
+                    <TableCell>{order.user?.name || "N/A"}</TableCell>
                     <TableCell>{order.quantity}</TableCell>
                     <TableCell>${order.total_amount}</TableCell>
+                    {/* FIXED STATUS CELL - Clean dropdown with status colors */}
                     <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
+                      <select
+                        value={order.status}
+                        className={`w-full border rounded-md p-2 text-sm font-semibold text-left disabled:opacity-50 ${getStatusColor(order.status)}`}
+                        onChange={(e) => {
+                          handleOrderUpdate({
+                            id: order.id,
+                            status: e.target.value,
+                          })
+                        }}
+                        disabled={order.status === "completed"}
+                      >
+                        <option value="booked">Booked</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
+                        <option value="with-customer">With Customer</option>
+                      </select>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">{dayjs(order.from_date).format("MMM D, YYYY")}</TableCell>
                     <TableCell className="whitespace-nowrap">{dayjs(order.to_date).format("MMM D, YYYY")}</TableCell>
@@ -140,12 +153,14 @@ function UserRentOrders() {
                     <TableCell>
                       <div className="flex gap-2">
                         {days(order.from_date).isAfter(days()) &&
-                          order.status === "booked" &&
-                          (
+                          order.status === "booked" && (
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => handleOrderCancel(Number(order.id))}
+                              onClick={() => handleOrderUpdate({
+                                id: order.id,
+                                status: "cancelled",
+                              })}
                             >
                               Cancel
                             </Button>
@@ -159,7 +174,7 @@ function UserRentOrders() {
           </div>
 
           {/* Mobile Card View - Hidden on desktop */}
-          <div className="md:hidden flex flex-col gap-4">
+          <div className="lg:hidden flex flex-col gap-4">
             {orders.map((order: IRentOrder) => (
               <Card key={order.id} className="overflow-hidden">
                 <CardContent className="p-4">
@@ -169,16 +184,38 @@ function UserRentOrders() {
                       <p className="text-xs text-gray-500">Order ID</p>
                       <p className="font-bold text-primary">#{order.id}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
+                    <div className="text-right">
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold mb-1 ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                      <select
+                        value={order.status}
+                        className="border border-gray-300 rounded p-1 text-sm w-full"
+                        onChange={(e) => {
+                          handleOrderUpdate({
+                            id: order.id,
+                            status: e.target.value,
+                          })
+                        }}
+                        disabled={order.status === "completed"}
+                      >
+                        <option value="booked">Booked</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
+                        <option value="with-customer">With Customer</option>
+                      </select>
+                    </div>
                   </div>
 
-                  {/* Product Info */}
+                  {/* Product & Customer Info */}
                   <div className="space-y-2 mb-3">
                     <div>
                       <p className="text-xs text-gray-500">Product</p>
                       <p className="font-medium">{order.item?.name || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Customer</p>
+                      <p className="font-medium">{order.user?.name || "N/A"}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -207,7 +244,7 @@ function UserRentOrders() {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Created At</p>
-                      <p className="text-sm">{dayjs(order.created_at).format("MMM D, YYYY")}</p>
+                      <p className="text-sm">{dayjs(order.created_at).format("MMM D, YYYY h:mm A")}</p>
                     </div>
                   </div>
 
@@ -218,7 +255,10 @@ function UserRentOrders() {
                         variant="destructive"
                         size="sm"
                         className="w-full"
-                        onClick={() => handleOrderCancel(Number(order.id))}
+                        onClick={() => handleOrderUpdate({
+                          id: order.id,
+                          status: "cancelled",
+                        })}
                       >
                         Cancel Order
                       </Button>
@@ -233,4 +273,4 @@ function UserRentOrders() {
   )
 }
 
-export default UserRentOrders
+export default AdminRentOrdersPage
