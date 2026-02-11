@@ -32,3 +32,14 @@ export interface ItemInterface {
   // Runtime only
   category: ICategory;
 }
+
+export interface IRentOrder {
+  id: string;
+  item_id: string;
+  user_id: string;
+  start_date: string;
+  end_date: string;
+  total_amount: number;
+  created_at: string;
+  updated_at: string;
+}

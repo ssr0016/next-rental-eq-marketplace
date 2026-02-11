@@ -8,10 +8,15 @@ import Spinner from "@/components/ui/spinner"
 import { ItemInterface } from "@/interfaces"
 import { getItemById } from "@/server-actions/items"
 import { getStripePaymentIntent } from "@/server-actions/payments"
+import { Elements } from '@stripe/react-stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
 import days from "dayjs"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
+import CheckoutForm from "../_components/checkout-form"
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 function ItemInfoPage() {
   const params: any = useParams()
@@ -24,6 +29,8 @@ function ItemInfoPage() {
   const [isAvailable, setIsAvailable] = useState(true) // for now, since we dont have any data in the database
   const [gettingPaymentIntent, setGettingPaymentIntent] = useState(false)
   const [totalAmount, setTotalAmount] = useState(0)
+  const [clientSecret, setClientSecret] = useState('')
+  const [openCheckoutForm, setOpenCheckoutForm] = useState(false)
 
   const getData = async () => {
     try {
@@ -50,12 +57,21 @@ function ItemInfoPage() {
         toast.error(response.message)
         return;
       }
-
-      console.log(response)
+      setClientSecret(response.clientSecret)
+      setOpenCheckoutForm(true)
     } catch (error: any) {
       toast.error(error.message)
     } finally {
       setGettingPaymentIntent(false)
+    }
+  }
+
+  const handleCheckoutFormSuccess = (paymentId: string) => {
+    try {
+
+      console.log("Payment successful with ID:", paymentId);
+    } catch (error: any) {
+      toast.error(error.message)
     }
   }
 
@@ -87,6 +103,10 @@ function ItemInfoPage() {
       </div>
     )
   }
+
+  const options = {
+    clientSecret: clientSecret,
+  };
 
   return (
     <div className="w-full">
@@ -245,8 +265,20 @@ function ItemInfoPage() {
 
             </div>
           </div>
+
         </div>
       </div>
+
+      {/* Checkout Form Modal - Outside the grid */}
+      {openCheckoutForm && clientSecret && (
+        <Elements stripe={stripePromise} options={options}>
+          <CheckoutForm
+            openCheckoutForm={openCheckoutForm}
+            setOpenCheckoutForm={setOpenCheckoutForm}
+            onPaymentSuccess={handleCheckoutFormSuccess}
+          />
+        </Elements>
+      )}
     </div>
   )
 }
