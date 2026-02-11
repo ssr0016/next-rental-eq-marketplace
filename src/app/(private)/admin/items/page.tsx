@@ -30,7 +30,7 @@ function AddItemsPage() {
   const getData = async () => {
     try {
       setLoading(true)
-      const response: any = await getAllItems()
+      const response: any = await getAllItems({})
       if (!response.success) {
         toast.error(response.message)
         return;

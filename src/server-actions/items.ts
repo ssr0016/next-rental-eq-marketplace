@@ -21,12 +21,24 @@ export const addNewItem = async (item: Partial<ItemInterface>) => {
   }
 };
 
-export const getAllItems = async () => {
+export const getAllItems = async (filters: any) => {
   try {
-    const { data, error } = await supabaseConfig
-      .from("items")
-      .select("*, categories(id, name)")
-      .order("created_at", { ascending: false });
+    let query = supabaseConfig.from("items").select("*, categories(id, name)");
+
+    if (filters.category && filters.category !== "all") {
+      query = query.eq("category_id", filters.category);
+    }
+
+    if (filters.sortBy) {
+      if (filters.sortBy === "price_asc") {
+        query = query.order("rent_per_day", { ascending: true });
+      } else if (filters.sortBy === "price_desc") {
+        query = query.order("rent_per_day", { ascending: false });
+      }
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       throw new Error(error.message);
     }
