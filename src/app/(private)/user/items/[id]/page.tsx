@@ -118,7 +118,7 @@ function ItemInfoPage() {
         return;
       }
       toast.success("Order created successfully");
-      router.push("/user/rents")
+      router.push("/user/orders")
       // console.log("Payment successful with ID:", paymentId);
     } catch (error: any) {
       toast.error(error.message)

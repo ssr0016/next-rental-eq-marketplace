@@ -57,7 +57,7 @@ function Sidebar({ openSidebar, setOpenSidebar }: { openSidebar: boolean, setOpe
     },
     {
       name: "Rents",
-      path: "/user/rents",
+      path: "/user/orders",
       icon: <ListTodo size={size} />
     },
     {

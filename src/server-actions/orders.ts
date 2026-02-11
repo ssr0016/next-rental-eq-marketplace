@@ -67,3 +67,49 @@ export const getItemAvailability = async ({
     };
   }
 };
+
+export const getUserOrders = async (userId: string) => {
+  try {
+    const { data, error } = await supabaseConfig
+      .from("orders")
+      .select("*, items(name)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) {
+      throw new Error(error.message);
+    }
+    return {
+      success: true,
+      data: data.map((order: any) => ({
+        ...order,
+        item: order.items,
+      })),
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
+
+export const getUpdateRentOrder = async (orderId: number, payload: any) => {
+  try {
+    const { data, error } = await supabaseConfig
+      .from("orders")
+      .update(payload)
+      .eq("id", orderId);
+    if (error) {
+      throw new Error(error.message);
+    }
+    return {
+      success: true,
+      data: data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
